@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\Unit
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{B30BEE06-409C-4D16-8BE6-4FBD5C6E20AB}"
 ProjectSection(SolutionItems) = preProject
-	..\crd\crd.yaml = ..\crd\crd.yaml
+	..\crd.yaml = ..\crd.yaml
 	..\readme.md = ..\readme.md
 EndProjectSection
 EndProject
