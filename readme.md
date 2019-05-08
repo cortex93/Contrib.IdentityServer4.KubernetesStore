@@ -1,7 +1,7 @@
 # Contrib.IdentityServer4.KubernetesStore
 
 [![NuGet package](https://img.shields.io/nuget/v/Contrib.IdentityServer4.KubernetesStore.svg)](https://www.nuget.org/packages/Contrib.IdentityServer4.KubernetesStore/)
-[![Build status](https://img.shields.io/appveyor/ci/AXOOM/contrib-kubeclient-customresources.svg)](https://ci.appveyor.com/project/AXOOM/contrib-kubeclient-customresources)
+[![Build status](https://img.shields.io/appveyor/ci/AXOOM/contrib-identityserver4-kubernetesstore.svg)](https://ci.appveyor.com/project/AXOOM/contrib-identityserver4-kubernetesstore)
 
 Allows [IdentityServer4](http://docs.identityserver.io) to fetch Clients, API Resources, etc. using [Kubernetes Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) rather than a database.
 
