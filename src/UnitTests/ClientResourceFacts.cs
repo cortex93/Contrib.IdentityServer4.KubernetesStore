@@ -8,23 +8,20 @@ namespace Contrib.IdentityServer4.KubernetesStore
     public class ClientResourceFacts
     {
         [Fact]
-        public void AcceptsValidGrantTypeCombinationsException()
+        public void AcceptsValidGrantTypeCombinations()
         {
-            VerifyDeserialize(
-                "{\"clientName\": \"My App\", \"allowedGrantTypes\": [\"authorization_code\"]}",
-                new Client {ClientName = "My App", AllowedGrantTypes = {"authorization_code"}});
+            var resource = Deserialize("{\"spec\": {\"clientName\": \"My App\", \"allowedGrantTypes\": [\"authorization_code\"]}}");
+            resource.Spec.Should().BeEquivalentTo(new Client {ClientName = "My App", AllowedGrantTypes = {"authorization_code"}});
         }
 
         [Fact]
         public void RejectsInvalidGrantTypeCombinationsWithoutException()
         {
-            VerifyDeserialize(
-                "{\"clientName\": \"My App\", \"allowedGrantTypes\": [\"authorization_code\", \"hybrid\"]}",
-                new Client {ClientName = "My App"});
+            var resource = Deserialize("{\"spec\": {\"clientName\": \"My App\", \"allowedGrantTypes\": [\"authorization_code\", \"hybrid\"]}}");
+            resource.SerializationErrors.Should().HaveCount(1);
         }
 
-        private static void VerifyDeserialize(string json, Client expectation)
-            => JsonConvert.DeserializeObject<Client>(json, ClientResource.Definition.SerializerSettings)
-                          .Should().BeEquivalentTo(expectation);
+        private static ClientResource Deserialize(string json)
+            => JsonConvert.DeserializeObject<ClientResource>(json, ClientResource.Definition.SerializerSettings);
     }
 }
