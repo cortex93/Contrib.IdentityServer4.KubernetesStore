@@ -21,18 +21,19 @@ spec:
       properties:
         spec:
           required:
+            - clientId
             - clientName
             - allowedGrantTypes
           properties:
             enabled:
               type: boolean
-              description: Specifies if client is enabled. This defaults to true.
+              description: Specifies if client is enabled. Defaults to true.
             clientId:
               type: string
-              description: Unique ID of the client. If not set, the resource namespace and name (joined with a hyphen) are used instead.
+              description: Unique ID of the client.
             clientSecrets:
               type: array
-              description: Client secrets - only relevant for flows that require a secret.
+              description: List of client secrets - credentials to access the token endpoint.
               items:
                 properties:
                   value:
@@ -49,13 +50,11 @@ spec:
                   - value
             accessTokenType:
               type: string
-              enum:
-                - jwt
-                - reference
-              description:  Specifies whether the access token is a reference token or a self contained JWT token. This defaults to 'jwt'.
+              enum: [jwt, Jwt, reference, Reference]
+              description: Specifies whether the access token is a reference token or a self contained JWT token. This defaults to 'jwt'.
             clientName:
               type: string
-              description:  Client display name (used for logging and consent screen).
+              description: Client display name (used for logging and consent screen).
             clientUri:
               type: string
               pattern: ^[^{]*$
@@ -67,15 +66,27 @@ spec:
             requireConsent:
               type: boolean
               description: Specifies whether a consent screen is required. This defaults to true.
+            requireClientSecret:
+              type: boolean
+              description: Specifies whether this client needs a secret to request tokens from the token endpoint (defaults to true).
             allowAccessTokensViaBrowser:
               type: boolean
-              description: Controls whether access tokens are transmitted via the browser for this client. This can prevent accidental leakage of access tokens when multiple response types are allowed.
+              description: Specifies whether this client is allowed to receive access tokens via the browser. This is useful to harden flows that allow multiple response types (e.g. by disallowing a hybrid flow client that is supposed to use code id_token to add the token response type and thus leaking the token to the browser.
+            allowOfflineAccess:
+              type: boolean
+              description: Specifies whether this client can request refresh tokens (be requesting the offline_access scope)
+            requirePkce:
+              type: boolean
+              description: Specifies whether clients using an authorization code based grant type must send a proof key.
+            allowPlainTextPkce:
+              type: boolean
+              description: Specifies whether clients using PKCE can use a plain text code challenge (not recommended - and default to false)
             alwaysIncludeUserClaimsInIdToken:
               type: boolean
-              description: When requesting both an id token and access token, should the user claims always be added to the id token instead of requring the client to use the userinfo endpoint.
+              description: When requesting both an id token and access token, should the user claims always be added to the id token instead of requring the client to use the userinfo endpoint. Default is false.
             allowedGrantTypes:
               type: array
-              description: Specifies the allowed grant types.
+              description: Specifies the grant types the client is allowed to use. Use the GrantTypes class for common combinations.
               items:
                 type: string
                 enum:
@@ -87,23 +98,33 @@ spec:
                   - urn:ietf:params:oauth:grant-type:device_code
             redirectUris:
               type: array
-              description: Specifies allowed URIs to return tokens or authorization codes to
+              description: Specifies the allowed URIs to return tokens or authorization codes to
               items:
                 type: string
                 pattern: ^[^{]*$
+            backChannelLogoutUri:
+              type: string
+              pattern: ^[^{]*$
+              description: Specifies logout URI at client for HTTP based back-channel logout. See the OIDC Back-Channel spec for more details.
+            backChannelLogoutSessionRequired:
+              type: boolean
+              description: Specifies if the user’s session id should be sent in the request to the BackChannelLogoutUri. Defaults to true.
             frontChannelLogoutUri:
               type: string
               pattern: ^[^{]*$
-              description: Specifies logout URI at client for HTTP front-channel based logout.
+              description: Specifies logout URI at client for HTTP based front-channel logout. See the OIDC Front-Channel spec for more details.
+            frontChannelLogoutSessionRequired:
+              type: boolean
+              description: Specifies if the user’s session id should be sent to the FrontChannelLogoutUri. Defaults to true.
             postLogoutRedirectUris:
               type: array
-              description: Specifies allowed URIs to redirect to after logout.
+              description: Specifies allowed URIs to redirect to after logout. See the OIDC Connect Session Management spec for more details.
               items:
                 type: string
                 pattern: ^[^{]*$
             allowedScopes:
               type: array
-              description: Specifies the api scopes that the client is allowed to request. If empty, the client can't access any scope.
+              description: By default a client has no access to any resources - specify the allowed resources by adding the corresponding scopes names.
               items:
                 type: string
             updateAccessTokenClaimsOnRefresh:
@@ -111,15 +132,66 @@ spec:
               description: Gets or sets a value indicating whether the access token (and its claims) should be updated on a refresh token request.
             allowedCorsOrigins:
               type: array
-              description: Gets or sets the allowed CORS origins for JavaScript clients.
+              description: If specified, will be used by the default CORS policy service implementations (In-Memory and EF) to build a CORS policy for JavaScript clients.
               items:
                 type: string
                 pattern: ^[^{]*$
+            alwaysSendClientClaims:
+              type: boolean
+              description: If set, the client claims will be sent for every flow. If not, only for client credentials flow (default is false)
+            clientClaimsPrefix:
+              type: string
+              description: If set, the prefix client claim types will be prefixed with. Defaults to 'client_'. The intent is to make sure they don’t accidentally collide with user claims.
+            userSsoLifetime:
+              type: number
+              description: The maximum duration (in seconds) since the last time the user authenticated. Defaults to null. You can adjust the lifetime of a session token to control when and how often a user is required to reenter credentials instead of being silently authenticated, when using a web application.
+            identityTokenLifetime:
+              type: number
+              description: Lifetime to identity token in seconds (defaults to 300 seconds / 5 minutes)
+            accessTokenLifetime:
+              type: number
+              description: Lifetime of access token in seconds (defaults to 3600 seconds / 1 hour)
+            authorizationCodeLifetime:
+              type: number
+              description: Lifetime of authorization code in seconds (defaults to 300 seconds / 5 minutes)
+            absoluteRefreshTokenLifetime:
+              type: number
+              description: Maximum lifetime of a refresh token in seconds. Defaults to 2592000 seconds / 30 days
+            slidingRefreshTokenLifetime:
+              type: number
+              description: Sliding lifetime of a refresh token in seconds. Defaults to 1296000 seconds / 15 days
+            refreshTokenUsage:
+              type: string
+              enum: [ReUse, reuse, OneTime, onetime]
+              description: "ReUse: the refresh token handle will stay the same when refreshing tokens. OneTime: the refresh token handle will be updated when refreshing tokens. This is the default."
+            refreshTokenExpiration:
+              type: string
+              enum: [Absolute, absolute, Sliding, sliding]
+              description: "Absolute: the refresh token will expire on a fixed point in time (specified by the AbsoluteRefreshTokenLifetime). Sliding: when refreshing the token, the lifetime of the refresh token will be renewed (by the amount specified in SlidingRefreshTokenLifetime). The lifetime will not exceed AbsoluteRefreshTokenLifetime."
+            includeJwtId:
+              type: boolean
+              description: Specifies whether JWT access tokens should have an embedded unique ID (via the 'jti' claim).
+            enableLocalLogin:
+              type: boolean
+              description: Specifies if this client can use local accounts, or external IdPs only. Defaults to true.
+            identityProviderRestrictions:
+              type: array
+              description: Specifies which external IdPs can be used with this client (if list is empty all IdPs are allowed). Defaults to empty.
+              items:
+                type: string
             claims:
               type: array
               description: Allows settings claims for the client (will be included in the access token).
               items:
-                type: string
+                type: object
+                properties:
+                  value:
+                    type: string
+                  type:
+                    type: string
+                required:
+                  - value
+                  - type
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -144,22 +216,24 @@ spec:
       properties:
         spec:
           type: object
+          required:
+            - name
           properties:
             enabled:
               type: boolean
               description: Indicates if this resource is enabled. This defaults to true.
             name:
               type: string
-              description: The unique name of the resource. If not set, the resource namespace and name (joined with a hyphen) are used instead.
+              description: The unique name of the API. This value is used for authentication with introspection and will be added to the audience of the outgoing access token.
             displayName:
               type: string
-              description: Display name of the resource.
+              description: This value can be used e.g. on the consent screen.
             description:
               type: string
-              description: Description of the resource.
+              description: This value can be used e.g. on the consent screen.
             userClaims:
               type: array
-              description: List of accociated user claims that should be included when this resource is requested.
+              description: List of associated user claim types that should be included in the access token.
               items:
                 type: string
             apiSecrets:
@@ -188,25 +262,25 @@ spec:
                 properties:
                   name:
                     type: string
-                    description: Name of the scope. This is the value a client will use to request the scope.
+                    description: The unique name of the scope. This is the value a client will use for the scope parameter in the authorize/token request.
                   displayName:
                     type: string
-                    description:  This value will be used e.g. on the consent screen.
+                    description: This value can be used e.g. on the consent screen.
                   description:
                     type: string
-                    description: This value will be used e.g. on the consent screen.
+                    description: This value can be used e.g. on the consent screen.
                   required:
                     type: boolean
-                    description: Specifies whether the user can de-select the scope on the consent screen.
+                    description: Specifies whether the user can de-select the scope on the consent screen (if the consent screen wants to implement such a feature). Defaults to false.
                   emphasize:
                     type: boolean
-                    description: Specifies whether the consent screen will emphasize this scope. Use this setting for sensitive or important scopes.
+                    description: Specifies whether the consent screen will emphasize this scope (if the consent screen wants to implement such a feature). Use this setting for sensitive or important scopes. Defaults to false.
                   showInDiscoveryDocument:
                     type: boolean
-                    description: Specifies whether this scope is shown in the discovery document. This defaults to true.
+                    description: Specifies whether this scope is shown in the discovery document. Defaults to true.
                   userClaims:
                     type: array
-                    description: List of user-claim types that should be included in the access token.
+                    description: List of associated user claim types that should be included in the access token. The claims specified here will be added to the list of claims specified for the API.
                     items:
                       type: string
 ---
@@ -232,13 +306,15 @@ spec:
       properties:
         spec:
           type: object
+          required:
+            - name
           properties:
             enabled:
               type: boolean
               description: Indicates if this resource is enabled. This defaults to true.
             name:
               type: string
-              description: The unique name of the resource. If not set, the resource namespace and name (joined with a hyphen) are used instead.
+              description: The unique name of the resource.
             displayName:
               type: string
               description: Display name of the resource.
