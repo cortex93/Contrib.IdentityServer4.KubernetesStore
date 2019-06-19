@@ -21,7 +21,6 @@ spec:
       properties:
         spec:
           required:
-            - clientId
             - clientName
             - allowedGrantTypes
           properties:
@@ -30,7 +29,7 @@ spec:
               description: Specifies if client is enabled. Defaults to true.
             clientId:
               type: string
-              description: Unique ID of the client.
+              description: Unique ID of the client. If not set, the resource namespace and name (joined with a hyphen) are used instead.
             clientSecrets:
               type: array
               description: List of client secrets - credentials to access the token endpoint.
@@ -216,15 +215,13 @@ spec:
       properties:
         spec:
           type: object
-          required:
-            - name
           properties:
             enabled:
               type: boolean
               description: Indicates if this resource is enabled. This defaults to true.
             name:
               type: string
-              description: The unique name of the API. This value is used for authentication with introspection and will be added to the audience of the outgoing access token.
+              description: The unique name of the API. This value is used for authentication with introspection and will be added to the audience of the outgoing access token. If not set, the resource namespace and name (joined with a hyphen) are used instead.
             displayName:
               type: string
               description: This value can be used e.g. on the consent screen.
@@ -306,15 +303,13 @@ spec:
       properties:
         spec:
           type: object
-          required:
-            - name
           properties:
             enabled:
               type: boolean
               description: Indicates if this resource is enabled. This defaults to true.
             name:
               type: string
-              description: The unique name of the resource.
+              description: The unique name of the resource. If not set, the resource namespace and name (joined with a hyphen) are used instead.
             displayName:
               type: string
               description: Display name of the resource.
